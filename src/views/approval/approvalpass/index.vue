@@ -1,0 +1,193 @@
+<template>
+  <basic-container>
+    <div class="custom-list">审批中</div>
+    <div class="search-content">
+      <div class="filter-area">
+        <span class="time-query">企业搜索</span>
+        <el-input class="enterprise-query" v-model="EnterpriseName" placeholder="请输入企业名称/社会信用代码/手机号" />
+      </div>
+      <div class="filter-area">
+        <span class="time-query">承信金额</span>
+        <el-input v-model="input" class="enterprise-query" placeholder="票面最小金额（元）" />-
+        <el-input v-model="input" class="enterprise-query" placeholder="票面最大金额（元）" />
+      </div>
+      <div class="filter-area">
+        <el-button class="query-button"><el-icon><Search style="margin-right: 2px"/></el-icon>查询</el-button>
+      </div>
+    </div>
+  </basic-container>
+  <basic-container>
+    <el-table :data="tableData" style="width: 100%" class="custom-table" :row-class-name="custom-row">
+      <el-table-column prop="recordCompanyName" label="企业名称" width="180" />
+      <el-table-column prop="holdCompanyName" label="持信企业" width="180" />
+      <el-table-column prop="creditAmount" label="承信金额（元）" />
+      <el-table-column prop="endTime" label="到期日" />
+      <el-table-column prop="rateDay" label="融资期限（天）" />
+      <el-table-column prop="customPhone" label="审批结果" />
+      <el-table-column prop="customPhone" label="审批时间" />
+      <el-table-column prop="auditStatus" label="提交时间" />
+      <el-table-column label="操作">
+        <template #default="scope">
+          <el-button size="small" @click="toDetail" class="opeation-button"
+          >审批</el-button
+          >
+        </template>
+      </el-table-column>
+    </el-table>
+    <!--  分页 -->
+    <div class="list-pagination">
+      <el-pagination
+          class="custom-pagination"
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[100, 200, 300, 400]"
+          :small="small"
+          :disabled="disabled"
+          :background="background"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="400"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+      />
+    </div>
+  </basic-container>
+</template>
+<script setup>
+import { ref,onMounted } from 'vue'
+import {useRouter} from 'vue-router'
+import {creditList} from "@/api/approval/approvalList";
+const router=useRouter()
+// 数据总数
+const total = ref(0)
+// 企业搜索
+const EnterpriseName = ref('')
+// 表格数据
+const tableData = ref([])
+// 分页
+const currentPage = ref(1)
+const pageSize = ref(10)
+const small = ref(false)
+const background = ref(false)
+const disabled = ref(false)
+// 跳转到详情
+function toDetail(finanalId) {
+  return router.push({
+    path: '../approvaldetail/index',
+    query:{finanalId}
+  })
+}
+// 查询列表
+function creditListQuery(){
+  creditList({
+    pageSize:pageSize.value,
+    pageNum:currentPage.value,
+    creditApplyStatus:'PASS'
+  })
+      .then(response => {
+        tableData.value = response.data.data.records
+        total.value=response.data.data.total
+      })
+      .catch(() => {
+        console.error(error)
+      });
+}
+// 生命周期
+onMounted(() => {
+  console.log('mounted')
+  creditListQuery()
+})
+</script>
+<style scoped>
+.search-content {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  background: #fff;
+  margin: 5px 0;
+  padding-left: 8px;
+  align-items: center;
+}
+.filter-area {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+.time-query{
+  font-size: 14px;
+  font-weight: 400;
+  padding-right: 10px;
+  color: rgba(0,0,0,0.85);
+}
+.enterprise-query{
+  width: 238px;
+  height: 30px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.25);
+  line-height: 30px;
+  padding: 0 10px;
+}
+::v-deep .time-picker{
+  width: 240px;
+  height: 30px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.25);
+  line-height: 30px;
+}
+.custom-list{
+  font-size: 16px;
+  font-weight: 500;
+  color: #000000;
+  padding: 20px 0;
+}
+.query-button{
+  width: 82px;
+  height: 32px;
+  color: #FFFFFF;
+  background: #4080FF;
+  box-shadow: 0px 2px 0px 0px rgba(0,0,0,0.04);
+  border-radius: 2px 2px 2px 2px;
+  opacity: 1;
+  border: 1px solid #4080FF;
+}
+.down-button{
+  margin-left: 8px;
+  width: 82px;
+  height: 32px;
+  color: #4080FF;
+  background: #FFFFFF;
+  box-shadow: 0px 2px 0px 0px rgba(0,0,0,0.04);
+  border-radius: 2px 2px 2px 2px;
+  opacity: 1;
+  margin-bottom: 25px;
+  border: 1px solid #4080FF;
+}
+::v-deep .custom-table tr th{
+  border-bottom: 1px solid #4080FF!important;
+}
+::v-deep .custom-table tr th .cell{
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0,0,0,0.85);
+  border-right: 1px solid #4080FF!important;
+}
+::v-deep .custom-table .cell{
+  text-align: center;
+}
+::v-deep .custom-table tr th:last-child .cell{
+  border-right: 1px solid #ffffff!important;
+}
+.custom-table .custom-row {
+  --el-table-tr-bg-color: var(--el-empty-fill-color-5);
+}
+.opeation-button{
+  border: none;
+  color: #4080FF;
+}
+.list-pagination{
+  margin-top: 30px;
+}
+.custom-pagination{
+  justify-content: center;
+}
+</style>
